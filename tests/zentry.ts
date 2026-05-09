@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
+// @ts-ignore
 import { Zentry } from "../target/types/zentry";
 import { 
   SystemProgram, 
@@ -35,7 +36,7 @@ describe("zentry", () => {
       })
       .rpc();
 
-    const policyAccount = await program.account.voicePolicy.fetch(policyPDA);
+    const policyAccount: any = await program.account.voicePolicy.fetch(policyPDA);
     expect(policyAccount.maxAmount.toString()).to.equal(maxAmount.toString());
     expect(policyAccount.authority.toBase58()).to.equal(wallet.publicKey.toBase58());
   });
