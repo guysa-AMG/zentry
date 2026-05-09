@@ -43,9 +43,27 @@ class DrivingModeHud extends HookConsumerWidget {
                   ElevatedButton.icon(
                     onPressed: () async {
                       if (!isConnected) {
-                        final address = await SolanaWalletService.connectWallet();
-                        if (address != null) {
-                          ref.read(identityStoreProvider.notifier).setPublicKey(address);
+                        final result = await SolanaWalletService.connectWallet();
+                        if (result != null && !result.address.startsWith('Error')) {
+                          ref.read(identityStoreProvider.notifier).updateAccount(
+                            result.address, 
+                            result.authToken
+                          );
+                          
+                          final intentNotifier = ref.read(intentStoreProvider.notifier);
+                          intentNotifier.addEvent(
+                            'Wallet Connected',
+                            'Address: ${result.address.substring(0, 4)}...${result.address.substring(result.address.length - 4)}',
+                            true,
+                          );
+                          intentNotifier.addEvent(
+                            'Zentry Sentinel Active',
+                            'Ready to sign transactions.',
+                            true,
+                          );
+                        } else if (result != null) {
+                          // In case of error string returned as address
+                          ref.read(identityStoreProvider.notifier).updateAccount(result.address, '');
                         }
                       }
                     },

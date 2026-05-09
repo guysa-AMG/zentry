@@ -63,7 +63,7 @@ class IntentStore extends Notifier<IntentState> {
           stopVoiceSession();
         },
         onError: (error) {
-          _addEvent('Connection Error', 'WebSocket error: $error', false);
+          addEvent('Connection Error', 'WebSocket error: $error', false);
           stopVoiceSession();
         },
       );
@@ -72,12 +72,12 @@ class IntentStore extends Notifier<IntentState> {
       // since we aren't hooking up a full WebRTC/audio streaming pipeline here.
       Future.delayed(const Duration(seconds: 3), () {
         if (state.isListening) {
-          _addEvent('Intent Detected', 'Parsed intent: Transfer.', true);
+          addEvent('Intent Detected', 'Parsed intent: Transfer.', true);
         }
       });
       
     } catch (e) {
-      _addEvent('Error', 'Failed to connect: $e', false);
+      addEvent('Error', 'Failed to connect: $e', false);
       stopVoiceSession();
     }
   }
@@ -106,7 +106,7 @@ class IntentStore extends Notifier<IntentState> {
       if (message is String) {
         final data = jsonDecode(message);
         if (data['type'] == 'intent_detection' && data['intent'] != null) {
-          _addEvent('Intent Detected', 'Action: ${data['intent']}', true);
+          addEvent('Intent Detected', 'Action: ${data['intent']}', true);
         }
       }
     } catch (_) {
@@ -114,7 +114,7 @@ class IntentStore extends Notifier<IntentState> {
     }
   }
 
-  void _addEvent(String title, String description, bool isSuccess) {
+  void addEvent(String title, String description, bool isSuccess) {
     state = state.copyWith(
       events: [
         ...state.events,
