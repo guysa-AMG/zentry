@@ -4,27 +4,16 @@ import '../widgets/pulsating_ai_orb.dart';
 import '../widgets/audit_timeline.dart';
 import '../services/solana_wallet_service.dart';
 
-class WalletConnection extends Notifier<bool> {
-  @override
-  bool build() => false;
-  void setConnected(bool value) { state = value; }
-}
-final walletConnectionProvider = NotifierProvider<WalletConnection, bool>(WalletConnection.new);
-
-class WalletAddress extends Notifier<String?> {
-  @override
-  String? build() => null;
-  void setAddress(String? value) { state = value; }
-}
-final walletAddressProvider = NotifierProvider<WalletAddress, String?>(WalletAddress.new);
+import '../stitch/identity_store.dart';
 
 class DrivingModeHud extends HookConsumerWidget {
   const DrivingModeHud({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isConnected = ref.watch(walletConnectionProvider);
-    final walletAddress = ref.watch(walletAddressProvider);
+    final identityState = ref.watch(identityStoreProvider);
+    final isConnected = identityState.isConnected;
+    final walletAddress = identityState.publicKey;
 
     final dummyEvents = [
       AuditEvent(
@@ -74,8 +63,7 @@ class DrivingModeHud extends HookConsumerWidget {
                       if (!isConnected) {
                         final address = await SolanaWalletService.connectWallet();
                         if (address != null) {
-                          ref.read(walletConnectionProvider.notifier).setConnected(true);
-                          ref.read(walletAddressProvider.notifier).setAddress(address);
+                          ref.read(identityStoreProvider.notifier).setPublicKey(address);
                         }
                       }
                     },
@@ -84,8 +72,10 @@ class DrivingModeHud extends HookConsumerWidget {
                       color: isConnected ? Colors.greenAccent : Colors.white,
                     ),
                     label: Text(
-                      isConnected
-                          ? '${walletAddress?.substring(0, 4)}...${walletAddress?.substring(walletAddress.length - 4)}'
+                      isConnected && walletAddress != null
+                          ? walletAddress.length > 8
+                              ? '${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}'
+                              : walletAddress
                           : 'Connect MWA',
                     ),
                     style: ElevatedButton.styleFrom(

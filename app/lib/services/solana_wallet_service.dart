@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:solana_mobile_client/solana_mobile_client.dart';
 import 'package:bs58/bs58.dart';
 
@@ -24,11 +25,12 @@ class SolanaWalletService {
       
       if (result != null) {
         // Return public key as base58 string
-        return base58.encode(result.publicKey);
+        return base58.encode(Uint8List.fromList(result.publicKey));
       }
     } catch (e) {
       // ignore: avoid_print
       print('Error connecting wallet: $e');
+      return 'Error: $e';
     }
     return null;
   }
