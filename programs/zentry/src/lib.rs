@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_lang::solana_program::sysvar::instructions::{
     load_current_index_checked, load_instruction_at_checked,
 };
-use anchor_lang::solana_program::system_program;
 
 declare_id!("Zen1111111111111111111111111111111111111111");
 
