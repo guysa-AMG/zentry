@@ -18,9 +18,9 @@ class ZentryApp extends StatelessWidget {
     return MaterialApp(
       title: 'Zentry Voice App',
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 18, 18, 19),
         colorScheme: const ColorScheme.dark(
-          primary: Colors.blueAccent,
+          primary: Color.fromARGB(255, 103, 187, 82),
           secondary: Colors.cyanAccent,
         ),
       ),

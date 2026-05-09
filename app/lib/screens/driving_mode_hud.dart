@@ -14,7 +14,7 @@ class DrivingModeHud extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final identityState = ref.watch(identityStoreProvider);
     final isConnected = identityState.isConnected;
-    final walletAddress = identityState.publicKey;
+    final walletAddress = identityState.activePublicKey;
 
     final intentState = ref.watch(intentStoreProvider);
 
@@ -45,7 +45,6 @@ class DrivingModeHud extends HookConsumerWidget {
                       if (!isConnected) {
                         final result = await SolanaWalletService.connectWallet();
                         if (result != null && !result.address.startsWith('Error')) {
-                          // Force a rebuild by updating state in a microtask (the "nudge")
                           Future.microtask(() {
                             ref.read(identityStoreProvider.notifier).updateAccount(
                               result.address, 
@@ -67,6 +66,73 @@ class DrivingModeHud extends HookConsumerWidget {
                         } else if (result != null) {
                           ref.read(identityStoreProvider.notifier).updateAccount(result.address, '');
                         }
+                      } else {
+                        // Show Account Management Dialog
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Manage Accounts'),
+                            backgroundColor: const Color(0xFF1E293B),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: identityState.accounts.length,
+                                itemBuilder: (context, index) {
+                                  final account = identityState.accounts[index];
+                                  final isCurrent = account.publicKey == walletAddress;
+                                  return ListTile(
+                                    title: Text(
+                                      '${account.publicKey.substring(0, 6)}...${account.publicKey.substring(account.publicKey.length - 6)}',
+                                      style: TextStyle(
+                                        color: isCurrent ? Colors.greenAccent : Colors.white,
+                                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (!isCurrent)
+                                          IconButton(
+                                            icon: const Icon(Icons.swap_horiz, color: Colors.blueAccent),
+                                            onPressed: () {
+                                              ref.read(identityStoreProvider.notifier).switchAccount(account.publicKey);
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                          onPressed: () {
+                                            ref.read(identityStoreProvider.notifier).removeAccount(account.publicKey);
+                                            if (identityState.accounts.length <= 1) {
+                                              Navigator.pop(context);
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                child: const Text('Add Account'),
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  final result = await SolanaWalletService.connectWallet();
+                                  if (result != null && !result.address.startsWith('Error')) {
+                                    ref.read(identityStoreProvider.notifier).updateAccount(result.address, result.authToken);
+                                  }
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('Close'),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                     },
                     icon: Icon(
