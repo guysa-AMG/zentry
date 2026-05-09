@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_lang::solana_program::sysvar::instructions::{
     load_current_index_checked, load_instruction_at_checked,
 };
-use anchor_lang::solana_program::system_program;
 
 declare_id!("Zen1111111111111111111111111111111111111111");
 
@@ -17,6 +17,8 @@ pub mod zentry {
         Ok(())
     }
 
+    /// Verifies that the next instruction in the transaction is a System Program Transfer
+    /// and that the amount matches the intent and is within policy limits.
     pub fn check_verifiable_intent(ctx: Context<CheckVerifiableIntent>, amount: u64) -> Result<()> {
         let policy = &ctx.accounts.policy;
         let instructions_sysvar = &ctx.accounts.instructions_sysvar;
