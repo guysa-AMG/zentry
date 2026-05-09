@@ -1,6 +1,6 @@
 # app
 
-A new Flutter project.
+Zentry is a Verifiable Intent Layer. We've noticed that AI Agents on Solana are currently 'untrusted' because one prompt injection can drain a wallet. We solve this by introducing an atomic Sentinel Instruction. The app intercepts voice commands, generates a policy-constrained transaction, and our Rust program audits it at the instruction level before a single lamport moves. It's essentially Stripe Radar for the Agentic Web
 
 ## Getting Started
 
