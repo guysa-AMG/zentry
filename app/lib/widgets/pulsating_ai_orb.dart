@@ -5,12 +5,14 @@ class PulsatingAiOrb extends StatefulWidget {
   final double size;
   final Color color;
   final bool isActive;
+  final double volume;
 
   const PulsatingAiOrb({
     super.key,
     this.size = 150.0,
     this.color = Colors.cyanAccent,
     this.isActive = false,
+    this.volume = 0.0,
   });
 
   @override
@@ -65,9 +67,13 @@ class PulsatingAiOrbState extends State<PulsatingAiOrb>
     return AnimatedBuilder(
       animation: Listenable.merge([_controller, _scaleController]),
       builder: (context, child) {
-        final scale = 1.0 + (_scaleController.value * 0.2);
+        // Base scale + pulse + voice volume reactivity
+        final pulseScale = _controller.value * 0.05;
+        final voiceScale = widget.volume * 0.5;
+        final scale = 1.0 + (_scaleController.value * 0.2) + pulseScale + voiceScale;
+        
         final currentSize = widget.size * scale;
-        final intensity = widget.isActive ? 1.0 : 0.6;
+        final intensity = (widget.isActive ? 1.0 : 0.6) + (widget.volume * 0.4);
 
         return Container(
           width: currentSize,
@@ -76,16 +82,16 @@ class PulsatingAiOrbState extends State<PulsatingAiOrb>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                widget.color.withValues(alpha: 0.8 * intensity),
-                widget.color.withValues(alpha: 0.4 * _controller.value * intensity),
+                widget.color.withValues(alpha: (0.8 * intensity).clamp(0.0, 1.0)),
+                widget.color.withValues(alpha: (0.4 * _controller.value * intensity).clamp(0.0, 1.0)),
                 Colors.transparent,
               ],
               stops: const [0.2, 0.6, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withValues(alpha: intensity * _controller.value),
-                blurRadius: 40 * _controller.value + 20,
+                color: widget.color.withValues(alpha: (intensity * _controller.value).clamp(0.0, 1.0)),
+                blurRadius: 40 * _controller.value + 20 + (widget.volume * 30),
                 spreadRadius: 10 * _controller.value * scale,
               ),
             ],

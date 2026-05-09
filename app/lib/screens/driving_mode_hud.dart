@@ -102,6 +102,7 @@ class DrivingModeHud extends HookConsumerWidget {
                   size: 200,
                   color: intentState.isListening ? Colors.purpleAccent : Colors.blueAccent,
                   isActive: intentState.isListening,
+                  volume: intentState.currentVolume,
                 ),
               ),
             ),
