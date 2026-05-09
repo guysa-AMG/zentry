@@ -35,6 +35,7 @@ class IdentityStore extends Notifier<IdentityState> {
   }
 
   void updateAccount(String key, String token) {
+    // The "nudge": ensure state update is perceived by listeners
     state = state.copyWith(publicKey: key, authToken: token, isConnected: true);
   }
 

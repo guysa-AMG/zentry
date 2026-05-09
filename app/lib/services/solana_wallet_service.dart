@@ -20,17 +20,22 @@ class SolanaWalletService {
       
       final client = await session.start();
       
-      final result = await client.authorize(
-        identityUri: Uri.parse('https://example.com'),
-        iconUri: Uri.parse('https://example.com/favicon.ico'),
-        identityName: 'Zentry Voice App',
-        cluster: 'devnet',
-      );
-      
-      await session.close();
+      AuthorizationResult? result;
+      try {
+        result = await client.authorize(
+          identityUri: Uri.parse('https://zentry.com'),
+          iconUri: Uri.parse('favicon.ico'),
+          identityName: 'Zentry',
+          cluster: 'devnet',
+        );
+      } catch (e) {
+        print('MWA Authorize Error: $e');
+        rethrow;
+      } finally {
+        await session.close();
+      }
       
       if (result != null) {
-        // Return public key as base58 string and the auth token
         final address = base58.encode(Uint8List.fromList(result.publicKey));
         return WalletConnectionResult(address, result.authToken);
       }
