@@ -80,7 +80,7 @@ class IntentStore extends Notifier<IntentState> {
     try {
       addEvent('WebSocket Request Sent...', 'Initializing connection...', true);
       _channel = WebSocketChannel.connect(wsUrl);
-
+      
       // Ensure the WebSocket connection is established
       await _channel!.ready;
       addEvent('Socket Opened...', 'Handshake in progress.', true);
@@ -156,29 +156,29 @@ class IntentStore extends Notifier<IntentState> {
           numChannels: 1,
         );
         
-      final stream = await _audioRecorder.startStream(config);
+        final stream = await _audioRecorder.startStream(config);
         addEvent('Mic Start', 'Streaming PCM 16k (Base64)', true);
 
-      // Map microphone amplitude to volume state
-      _amplitudeSubscription = _audioRecorder
-          .onAmplitudeChanged(const Duration(milliseconds: 100))
-          .listen((amp) {
+        // Map microphone amplitude to volume state
+        _amplitudeSubscription = _audioRecorder
+            .onAmplitudeChanged(const Duration(milliseconds: 100))
+            .listen((amp) {
           double volume = (amp.current + 50) / 40;
-        volume = volume.clamp(0.0, 1.0);
-        updateVolume(volume);
-      });
+          volume = volume.clamp(0.0, 1.0);
+          updateVolume(volume);
+        });
 
         // Pipe audio data to WebSocket as Base64 JSON chunks
         _audioSubscription = stream.listen((data) {
-        if (state.isListening) {
+          if (state.isListening) {
             final base64Chunk = base64Encode(data);
             _channel?.sink.add(jsonEncode({
               "user_audio_chunk": base64Chunk,
             }));
-        }
+          }
         }, onError: (e) {
           addEvent('Mic Stream Error', '$e', false);
-      });
+        });
       } catch (e) {
         addEvent('Mic Error', 'Failed to start stream: $e', false);
         stopVoiceSession();

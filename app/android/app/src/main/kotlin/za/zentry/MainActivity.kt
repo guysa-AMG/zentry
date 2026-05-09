@@ -1,4 +1,4 @@
-package com.example.app
+package za.zentry
 
 import io.flutter.embedding.android.FlutterActivity
 
