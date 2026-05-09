@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class PulsatingAiOrb extends StatefulWidget {
   final double size;
   final Color color;
+  final bool isActive;
 
   const PulsatingAiOrb({
     super.key,
     this.size = 150.0,
     this.color = Colors.cyanAccent,
+    this.isActive = false,
   });
 
   @override
@@ -16,47 +18,75 @@ class PulsatingAiOrb extends StatefulWidget {
 }
 
 class PulsatingAiOrbState extends State<PulsatingAiOrb>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _scaleController;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: Duration(milliseconds: widget.isActive ? 800 : 2000),
     )..repeat(reverse: true);
+    
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      value: widget.isActive ? 1.0 : 0.0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant PulsatingAiOrb oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _controller.duration = const Duration(milliseconds: 800);
+        _controller.repeat(reverse: true);
+        _scaleController.forward();
+      } else {
+        _controller.duration = const Duration(seconds: 2);
+        _controller.repeat(reverse: true);
+        _scaleController.reverse();
+      }
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_controller, _scaleController]),
       builder: (context, child) {
+        final scale = 1.0 + (_scaleController.value * 0.2);
+        final currentSize = widget.size * scale;
+        final intensity = widget.isActive ? 1.0 : 0.6;
+
         return Container(
-          width: widget.size,
-          height: widget.size,
+          width: currentSize,
+          height: currentSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                widget.color.withValues(alpha: 0.8),
-                widget.color.withValues(alpha: 0.4 * _controller.value),
+                widget.color.withValues(alpha: 0.8 * intensity),
+                widget.color.withValues(alpha: 0.4 * _controller.value * intensity),
                 Colors.transparent,
               ],
               stops: const [0.2, 0.6, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withValues(alpha: 0.6 * _controller.value),
+                color: widget.color.withValues(alpha: intensity * _controller.value),
                 blurRadius: 40 * _controller.value + 20,
-                spreadRadius: 10 * _controller.value,
+                spreadRadius: 10 * _controller.value * scale,
               ),
             ],
           ),
@@ -85,7 +115,7 @@ class _OrbCorePainter extends CustomPainter {
 
     final paint = Paint()
       ..color = Colors.white.withValues(alpha: 0.8 + 0.2 * animationValue)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
 
     canvas.drawCircle(center, coreRadius, paint);
 

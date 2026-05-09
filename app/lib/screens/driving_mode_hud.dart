@@ -5,6 +5,7 @@ import '../widgets/audit_timeline.dart';
 import '../services/solana_wallet_service.dart';
 
 import '../stitch/identity_store.dart';
+import '../stitch/intent_store.dart';
 
 class DrivingModeHud extends HookConsumerWidget {
   const DrivingModeHud({super.key});
@@ -15,26 +16,7 @@ class DrivingModeHud extends HookConsumerWidget {
     final isConnected = identityState.isConnected;
     final walletAddress = identityState.publicKey;
 
-    final dummyEvents = [
-      AuditEvent(
-        title: 'Voice Command Received',
-        description: 'Initiate token transfer to multisig.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        isSuccess: true,
-      ),
-      AuditEvent(
-        title: 'Policy Check',
-        description: 'Validating against VoicePolicy PDA constraints.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-        isSuccess: true,
-      ),
-      AuditEvent(
-        title: 'Transaction Signed',
-        description: 'Signed securely via connected wallet.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
-        isSuccess: true,
-      ),
-    ];
+    final intentState = ref.watch(intentStoreProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // Dark slate
@@ -91,14 +73,15 @@ class DrivingModeHud extends HookConsumerWidget {
             ),
             
             // AI Orb Component
-            const Positioned(
+            Positioned(
               top: 120,
               left: 0,
               right: 0,
               child: Center(
                 child: PulsatingAiOrb(
                   size: 200,
-                  color: Colors.blueAccent,
+                  color: intentState.isListening ? Colors.purpleAccent : Colors.blueAccent,
+                  isActive: intentState.isListening,
                 ),
               ),
             ),
@@ -129,7 +112,7 @@ class DrivingModeHud extends HookConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: AuditTimeline(events: dummyEvents),
+                      child: AuditTimeline(events: intentState.events.reversed.toList()),
                     ),
                   ],
                 ),
@@ -144,7 +127,12 @@ class DrivingModeHud extends HookConsumerWidget {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    // Logic for mic action
+                    final notifier = ref.read(intentStoreProvider.notifier);
+                    if (intentState.isListening) {
+                      notifier.stopVoiceSession();
+                    } else {
+                      notifier.startVoiceSession();
+                    }
                   },
                   child: Container(
                     width: 100,
