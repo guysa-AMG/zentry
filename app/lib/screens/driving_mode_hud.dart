@@ -32,7 +32,7 @@ class DrivingModeHud extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'HUD ACTIVE',
+                    ' ',
                     style: TextStyle(
                       color: Color(0xFF9FFC2D),
                       fontSize: 16,

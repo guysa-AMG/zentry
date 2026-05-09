@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:record/record.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import '../widgets/audit_timeline.dart';
 
 class IntentState {
@@ -34,9 +37,14 @@ class IntentStore extends Notifier<IntentState> {
   WebSocketChannel? _channel;
   final _audioRecorder = AudioRecorder();
   StreamSubscription<Amplitude>? _amplitudeSubscription;
+  StreamSubscription<List<int>>? _audioSubscription;
 
   @override
   IntentState build() {
+    // Ensure cleanup when provider is disposed
+    ref.onDispose(() {
+      stopVoiceSession();
+    });
     return IntentState(
       isListening: false,
       events: [],
@@ -67,42 +75,114 @@ class IntentStore extends Notifier<IntentState> {
     );
 
     // ElevenLabs WebSocket endpoint (placeholder agent_id)
-    final wsUrl = Uri.parse('wss://api.elevenlabs.io/v1/convai/conversation?agent_id=zentry_agent_01');
+    final wsUrl = Uri.parse('wss://api.elevenlabs.io/v1/convai/conversation?agent_id=user_6201kr5xvc1he9j8mb0jm3gmxv08&xi-api-key=sk_6d981f307429943ca520914839ce0a1c8252caffcbc253dc');
     
     try {
+      addEvent('WebSocket Request Sent...', 'Initializing connection...', true);
       _channel = WebSocketChannel.connect(wsUrl);
+
+      // Ensure the WebSocket connection is established
+      await _channel!.ready;
+      addEvent('Socket Opened...', 'Handshake in progress.', true);
+
+      // Send initiation data immediately
+      _channel!.sink.add(jsonEncode({
+        "type": "conversation_initiation_client_data",
+        "conversation_config_override": {
+          "agent": {
+            "first_message": "Zentry active.",
+            "language": "en"
+          }
+        }
+      }));
 
       _channel!.stream.listen(
         (message) {
+          
+          debugPrint('WS Message: $message');
+          try {
+            final data = jsonDecode(message);
+            // Catch ElevenLabs server-side errors
+            if (data['type'] == 'error' || data['error'] != null) {
+              final errorMsg = data['message'] ?? data['error'] ?? 'Unknown remote error';
+              addEvent('ElevenLabs Error', errorMsg, false);
+            }
+            // Check for session initiation confirmation
+            if (data['type'] == 'conversation_initiation_metadata') {
+              addEvent('Session Ready', 'Handshake confirmed.', true);
+            }
+          } catch (_) {}
           _handleVoiceMessage(message);
         },
-        onDone: () => stopVoiceSession(),
+        onDone: () {
+          addEvent('Connection Closed', 'Session ended.', false);
+          stopVoiceSession();
+        },
         onError: (e) {
           addEvent('Connection Error', 'WS error: $e', false);
           stopVoiceSession();
         },
       );
       
+      // Audio Session Keep-Alive Pattern
+      try {
+        addEvent('Mic Requesting Focus...', 'Configuring audio session.', true);
+        final session = await AudioSession.instance;
+        await session.configure(const AudioSessionConfiguration.speech());
+        
+        final activated = await session.setActive(true);
+        if (!activated) {
+          addEvent('Session Error', 'OS denied audio focus.', false);
+          stopVoiceSession();
+          return;
+        }
+
+        // 200ms delay for OS driver rerouting
+        await Future.delayed(const Duration(milliseconds: 200));
+        
+      } catch (e) {
+        addEvent('Session Error', 'Audio session failed: $e', false);
+        stopVoiceSession();
+        return;
+      }
+
+      if (!state.isListening) return;
+
       // Start microphone stream
-      const config = RecordConfig();
+      try {
+        const config = RecordConfig(
+          encoder: AudioEncoder.pcm16bits,
+          sampleRate: 16000,
+          numChannels: 1,
+        );
+        
       final stream = await _audioRecorder.startStream(config);
+        addEvent('Mic Start', 'Streaming PCM 16k (Base64)', true);
 
       // Map microphone amplitude to volume state
       _amplitudeSubscription = _audioRecorder
           .onAmplitudeChanged(const Duration(milliseconds: 100))
           .listen((amp) {
-        // Normalizing amplitude (-160 to 0) to 0.0 - 1.0 range
-        double volume = (amp.current + 160) / 160;
+          double volume = (amp.current + 50) / 40;
         volume = volume.clamp(0.0, 1.0);
         updateVolume(volume);
       });
 
-      // Pipe audio data to WebSocket
-      stream.listen((data) {
+        // Pipe audio data to WebSocket as Base64 JSON chunks
+        _audioSubscription = stream.listen((data) {
         if (state.isListening) {
-          _channel?.sink.add(data);
+            final base64Chunk = base64Encode(data);
+            _channel?.sink.add(jsonEncode({
+              "user_audio_chunk": base64Chunk,
+            }));
         }
+        }, onError: (e) {
+          addEvent('Mic Stream Error', '$e', false);
       });
+      } catch (e) {
+        addEvent('Mic Error', 'Failed to start stream: $e', false);
+        stopVoiceSession();
+      }
 
     } catch (e) {
       addEvent('Error', 'Failed to initialize session: $e', false);
@@ -115,8 +195,15 @@ class IntentStore extends Notifier<IntentState> {
     
     await _audioRecorder.stop();
     _amplitudeSubscription?.cancel();
+    _audioSubscription?.cancel();
     _channel?.sink.close();
     _channel = null;
+
+    // Release audio session
+    try {
+      final session = await AudioSession.instance;
+      await session.setActive(false);
+    } catch (_) {}
 
     state = state.copyWith(
       isListening: false,

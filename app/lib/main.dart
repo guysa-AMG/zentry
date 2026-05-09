@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'screens/driving_mode_hud.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(
@@ -32,7 +33,7 @@ class ZentryApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const DrivingModeHud(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

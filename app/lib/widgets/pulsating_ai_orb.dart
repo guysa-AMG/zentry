@@ -67,13 +67,21 @@ class PulsatingAiOrbState extends State<PulsatingAiOrb>
     return AnimatedBuilder(
       animation: Listenable.merge([_controller, _scaleController]),
       builder: (context, child) {
-        // Base scale + pulse + voice volume reactivity
-        final pulseScale = _controller.value * 0.05;
-        final voiceScale = widget.volume * 0.5;
-        final scale = 1.0 + (_scaleController.value * 0.2) + pulseScale + voiceScale;
+        // Scale calculation: Base scale + active growth + voice-driven pulse
+        // The orb only pulses significantly when the user is actually speaking
+        final basePulse = _controller.value * 0.05;
+        final activeScale = _scaleController.value * 0.2;
+        
+        // Enhance pulse intensity based on voice volume when active
+        final dynamicPulse = widget.isActive 
+            ? (basePulse * (0.2 + widget.volume * 2.5)) 
+            : basePulse;
+            
+        final voiceScale = widget.volume * 0.8; 
+        final scale = 1.0 + activeScale + dynamicPulse + voiceScale;
         
         final currentSize = widget.size * scale;
-        final intensity = (widget.isActive ? 1.0 : 0.6) + (widget.volume * 0.4);
+        final intensity = (widget.isActive ? 1.0 : 0.6) + (widget.volume * 0.6);
 
         return Container(
           width: currentSize,

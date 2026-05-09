@@ -1,4 +1,4 @@
-name: Zentry
+name: zentry
 description: "A Verifiable Intent Layer for Solana Agents"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -45,6 +45,7 @@ dependencies:
   permission_handler: ^12.0.1
   record: ^6.2.0
   shared_preferences: ^2.5.5
+  audio_session: ^0.1.25
 
 dev_dependencies:
   flutter_test:
@@ -92,7 +93,7 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#000000"
-  image: "assets/logo/logo.png"
+  image: "assets/logo/text_logo.png"
   android: true
   ios: true
 
