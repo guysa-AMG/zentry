@@ -42,14 +42,14 @@ class AuditTimeline extends StatelessWidget {
                       margin: const EdgeInsets.only(top: 8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: event.isSuccess ? Colors.greenAccent : Colors.redAccent,
+                        color: event.isSuccess ? const Color(0xFF9FFC2D) : Colors.redAccent,
                         boxShadow: [
                           BoxShadow(
                             color: event.isSuccess
-                                ? Colors.greenAccent.withValues(alpha: 0.5)
+                                ? const Color(0xFF9FFC2D).withValues(alpha: 0.5)
                                 : Colors.redAccent.withValues(alpha: 0.5),
                             blurRadius: 10,
-                            spreadRadius: 2,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
@@ -57,8 +57,8 @@ class AuditTimeline extends StatelessWidget {
                     if (!isLast)
                       Expanded(
                         child: Container(
-                          width: 2,
-                          color: Colors.white24,
+                          width: 1,
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                   ],

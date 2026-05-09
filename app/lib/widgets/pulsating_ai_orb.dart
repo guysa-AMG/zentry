@@ -10,7 +10,7 @@ class PulsatingAiOrb extends StatefulWidget {
   const PulsatingAiOrb({
     super.key,
     this.size = 150.0,
-    this.color = Colors.cyanAccent,
+    this.color = const Color(0xFF9FFC2D),
     this.isActive = false,
     this.volume = 0.0,
   });

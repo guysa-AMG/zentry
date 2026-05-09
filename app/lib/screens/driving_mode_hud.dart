@@ -19,7 +19,7 @@ class DrivingModeHud extends HookConsumerWidget {
     final intentState = ref.watch(intentStoreProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Dark slate
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Stack(
           children: [
@@ -32,12 +32,12 @@ class DrivingModeHud extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'DRIVING MODE',
+                    'HUD ACTIVE',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                      color: Color(0xFF9FFC2D),
+                      fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
+                      letterSpacing: 4.0,
                     ),
                   ),
                   ElevatedButton.icon(
@@ -180,21 +180,22 @@ class DrivingModeHud extends HookConsumerWidget {
               right: 16,
               bottom: 150,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white10),
+                  color: const Color(0xFF0A0A0A),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Audit Timeline',
+                    Text(
+                      'SYSTEM LOG',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.0,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -222,27 +223,23 @@ class DrivingModeHud extends HookConsumerWidget {
                     }
                   },
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 90,
+                    height: 90,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Colors.purpleAccent, Colors.deepPurple],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: intentState.isListening ? Colors.redAccent : const Color(0xFF9FFC2D),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.purpleAccent.withValues(alpha: 0.5),
-                          blurRadius: 30,
-                          spreadRadius: 5,
+                          color: (intentState.isListening ? Colors.redAccent : const Color(0xFF9FFC2D)).withValues(alpha: 0.3),
+                          blurRadius: 40,
+                          spreadRadius: 10,
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.mic,
-                      size: 50,
-                      color: Colors.white,
+                    child: Icon(
+                      intentState.isListening ? Icons.stop : Icons.mic,
+                      size: 40,
+                      color: Colors.black,
                     ),
                   ),
                 ),
