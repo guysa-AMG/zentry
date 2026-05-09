@@ -1,12 +1,12 @@
 [toolchain]
-anchor_version = "0.29.0"
+anchor_version = "0.32.1"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-zentry = "Zen1111111111111111111111111111111111111111"
+zentry = "73wskp4vv2tLGeisTCxB9SvJqC68TBvAgsyn79f11v2P"
 
 [registry]
 url = "https://github.com/coral-xyz/anchor"
